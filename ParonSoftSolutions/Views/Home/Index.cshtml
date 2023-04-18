@@ -1,0 +1,197 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div>
+
+    <section class="content">
+
+        <div class="row" style="padding-bottom: 10px;">
+            <div class="col-md-12 col-xs-12">
+                <div class="row">
+                    <div class="col-md-12 col-xs-12" style="width:300px;">
+                        <label class="col-md-12" style="padding:0px;">Employee ID</label>
+                        <div class="input-group col-md-12 date" style="padding:0px;">
+                            <input type="text" autocomplete="off" class="form-control" id="employeeID" name="employeeID" style="height: 32px;width:100%;">
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 col-xs-12" style="width:100%;padding-top:20px;">
+                        <div class="col-md-3 col-xs-12">
+                            <div class="input-group col-md-12 date" style="padding:0px;">
+                                <input type="button" autocomplete="off" class="btn btn-info" id="btnSearch" name="btnSearch" style="height: 32px;width:100%;" value="Show Salary with Bonus">
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-xs-12">
+                            <div class="input-group col-md-12 date" style="padding:0px;">
+                                <input type="button" autocomplete="off" class="btn btn-info" id="btnSalary" name="btnSalary" style="height: 32px;width:100%;" value="Highlight Salary">
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-xs-12">
+                            <div class="input-group col-md-12 date" style="padding:0px;">
+                                <input type="button" autocomplete="off" class="btn btn-info" id="btnName" name="btnName" style="height: 32px;width:100%;" value="Highlight Name">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-info">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Employee Information List</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="table-responsive" style="width:100%;overflow-x:auto;">
+                            <table id="viewTable" class="table no-margin display table-striped table-condensed table-responsive table-hover display nowrap">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                        <th>Salary with bonus</th>
+                                        <th>Join Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lst"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="viewTablepage" class="box-footer clearfix"> </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<link href="~/Content/sweetalert2.all.min.css" rel="stylesheet" />
+<script src="~/Scripts/sweetalert2.all.min.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+        GetEmployeesList();
+    });
+
+    function GetEmployeesList() {
+        debugger;
+        $.ajax({
+            type: "GET",
+            url: "/Home/GetEmployeesList",
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            success: function (result) {
+                debugger;
+                let htmlData = '';
+                for (i = 0; i < result.length; i++) {
+                    htmlData +=
+                        '<tr id="' + result[i]['Id'] + '">\
+                                <td>' + result[i]['Id'] + '</td>\
+                                <td class="name">' + result[i]['Name'] + '</td>\
+                                <td>' + result[i]['Designation'] + '</td>\
+                                <td class="salary">' + result[i]['Salary'] + '</td>\
+                                <td>' + result[i]['JoinDate'] + '</td>\
+                             </tr>';
+                };
+                $("#lst").html(htmlData);
+            },
+            error: function (response) {
+                debugger;
+                console.log(response);
+            }
+        });
+    };
+
+    $("#btnSalary").on('click', function (e) {
+        debugger;
+        var salary = document.getElementsByClassName("salary");
+        for (i = 0; i < salary.length; i++) {
+            salary[i].style.color = 'green';
+        }
+    });
+
+    $("#btnName").on('click', function (e) {
+        debugger;
+        var name = document.getElementsByClassName("name");
+        for (i = 0; i < name.length; i++) {
+            name[i].style.color = 'blue';
+        }
+    });
+
+    $('#employeeID').on('keypress', function (event) {
+        debugger;
+        var getVal = $('#employeeID').val();
+        var val = event.key;
+        if (val == " ") {
+            event.preventDefault();
+        }
+        else if (val == "Enter") {
+            event.preventDefault();
+        }
+        else {
+            if (isNaN(val)) {
+                if (val == '+' || val == '-' || val == 'E' || val == 'e' || val == '.') {
+                    getVal = getVal + val.replace("-", "").replace("+", "").replace("E", "").replace("e", "").replace(".", "");
+                    $('#employeeID').val(getVal);
+                    event.preventDefault();
+                }
+                else {
+                    swal({
+                        allowOutsideClick: false,
+                        title: 'Please provide valid employee id.',
+                        type: 'info',
+                        showCancelButton: false,
+                        confirmButtonText: 'Cancel',
+                        reverseButtons: true
+                    });
+                    event.preventDefault();
+                }
+            }
+            else {
+                console.log(val);
+            }
+        }
+    });
+
+    $("#btnSearch").on('click', function (e) {
+        debugger;
+        var val = $('#employeeID').val();
+        if (val != '' && val != '0') {
+            GetEmployeesListById(val);
+        }
+    });
+
+    function GetEmployeesListById(id) {
+        debugger;
+        $.ajax({
+            type: "GET",
+            url: "/Home/GetEmployeesListById",
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            data: { empID: id },
+            success: function (result) {
+                debugger;
+                let htmlData = '';
+                for (i = 0; i < result.length; i++) {
+                    htmlData +=
+                        '<tr id="' + result[i]['Id'] + '">\
+                                <td>' + result[i]['Id'] + '</td>\
+                                <td class="name">' + result[i]['Name'] + '</td>\
+                                <td>' + result[i]['Designation'] + '</td>\
+                                <td class="salary">' + result[i]['Salary'] + '</td>\
+                                <td>' + result[i]['JoinDate'] + '</td>\
+                             </tr>';
+                };
+                $("#lst").html(htmlData);
+            },
+            error: function (response) {
+                debugger;
+                console.log(response);
+            }
+        });
+    };
+
+</script>
